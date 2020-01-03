@@ -8,7 +8,7 @@ class Entity:
     """
     A generic object to represent players, enemies, items, etc.
     """
-    def __init__(self, x, y, char, color, name, render_order=RenderOrder, fighter=None, ai=None):
+    def __init__(self, x, y, char, color, name, render_order=RenderOrder, fighter=None, ai=None, speed=1):
         self.x = x
         self.y = y
         self.char = char
@@ -17,6 +17,8 @@ class Entity:
         self.render_order = render_order
         self.fighter = fighter
         self.ai = ai
+        self.speed = speed
+        self.wait = 0
 
         if self.fighter:
             self.fighter.owner = self
@@ -28,6 +30,7 @@ class Entity:
         # Move the entity by a given amount
         self.x += dx
         self.y += dy
+        self.wait = self.speed
 
     def move_towards(self, target_x, target_y, game_map, entities):
         dx = target_x - self.x
@@ -115,3 +118,54 @@ def melee_attack(target, monster, entities):
                         return entity
 
     return None
+
+
+def rail_check(entity, prevx, prevy, game_map):
+    count = 0
+    for x in range(entity.x - 1, entity.x + 2):
+        for y in range(entity.y - 1, entity.y + 2):
+            if (x, y) == (entity.x, y) or (x, y) == (x, entity.y):
+                if not (x, y) == (prevx, prevy):
+                    if not(x, y) == (entity.x, entity.y):
+                        if not game_map.is_blocked(x, y):
+                            count += 1
+            if count > 1:
+                return True
+
+    return False
+
+
+def path_change(entity, prevx, prevy, game_map):
+    a = entity.x - 1, entity.x, entity.x + 1
+    b = entity.y - 1, entity.y, entity.y + 1
+    for x in a:
+        for y in b:
+            if (x, y) == (entity.x, y) or (x, y) == (x, entity.y):
+                if not (x, y) == (entity.x, entity.y):
+                    if not (x, y) == (prevx, prevy):
+                        if not game_map.is_blocked(x, y):
+                            return (x, y)
+
+
+def dead_end(entity, game_map):
+    a = entity.x - 1, entity.x, entity.x + 1
+    b = entity.y - 1, entity.y, entity.y + 1
+    for x in a:
+        for y in b:
+            if (x, y) == (entity.x, y) or (x, y) == (x, entity.y):
+                if not (x, y) == (entity.x, entity.y):
+                    if not game_map.is_blocked(x, y):
+                        return (x, y)
+
+
+def rail_check_8_dir(entity, prevx, prevy, game_map):
+    count = 0
+    for x in range(entity.x - 1, entity.x + 2):
+        for y in range(entity.y - 1, entity.y + 2):
+            if not x == prevx and y == prevy or x == entity.x and y == entity.y:
+                if not game_map.is_blocked(x, y):
+                    count += 1
+            if count >= 2:
+                return True
+    print(count)
+    return False
