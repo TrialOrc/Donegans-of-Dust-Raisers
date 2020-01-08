@@ -1,8 +1,8 @@
 import tcod as libtcod
-import tcod.console as console
+# import tcod.console as console
 
 from enum import Enum
-from clubsandwich.ui import ScrollingTextView
+# from clubsandwich.ui import ScrollingTextView
 
 from map_objects.map_colors import height_colors, height_colors_dark
 from loader_functions.initialize_new_game import get_constants
@@ -15,7 +15,7 @@ class RenderOrder(Enum):
     PLAYER = 4
 
 
-def render_all(con, UI, entities, player, game_map, fov_map, fov_recompute, fov_radius, message_log, screen_width, screen_height, colors):
+def render_all(con, UI, entities, player, game_map, fov_map, fov_recompute, fov_radius, message_log, game_time, screen_width, screen_height, colors):
     noise = libtcod.noise_new(1, 0.5, 2.0)
     fov_torchx = 2
     fov_torchx += 0.2
@@ -79,7 +79,7 @@ def render_all(con, UI, entities, player, game_map, fov_map, fov_recompute, fov_
     UI.print(83, 1, "j/k:\nwasd:\ne:", fg=libtcod.green)
     UI.print(89, 1, "speed Up/Down\nChange Direction\nEMERGENCY Stop", fg=libtcod.white)
     UI.print(65, 17, "Space:", fg=libtcod.green)
-    UI.print(77, 17, "Pause", fg=libtcod.white)
+    UI.print(72, 17, "Pause", fg=libtcod.white)
     UI.print(83, 17, ".:", fg=libtcod.green)
     UI.print(89, 17, "One Step", fg=libtcod.white)
     # Scrolling text placeholder:
@@ -88,7 +88,7 @@ def render_all(con, UI, entities, player, game_map, fov_map, fov_recompute, fov_
 # Changing text:
     libtcod.console_set_default_foreground(UI, libtcod.white)
     # Date/Time Placeholder
-    libtcod.console_print_ex(UI, 1, 1, libtcod.BKGND_NONE, libtcod.LEFT, "19 Aug 1800 | 02:39 PM | 90 F")
+    libtcod.console_print_ex(UI, 1, 1, libtcod.BKGND_NONE, libtcod.LEFT, f'{game_time.days:02d} {game_time.month_name[int(game_time.months)][:3]} {game_time.years} | {game_time.twelve_hour_clock()}:{game_time.minutes:02d} {game_time.am_or_pm()} | 90 F')
     # Status
     libtcod.console_print_ex(UI, get_constants()['UI_width'] - 53, get_constants()['UI_height'] - 13, libtcod.BKGND_NONE, libtcod.LEFT,
                              'Health: {0:02}/{1:02}'.format(player.fighter.hp, player.fighter.max_hp))

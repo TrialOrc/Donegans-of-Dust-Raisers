@@ -1,5 +1,6 @@
 import tcod as libtcod
 import tcod.console as console
+from random import randint
 
 from components.fighter import Fighter
 from input_handlers import handle_keys
@@ -11,6 +12,7 @@ from game_states import GameStates
 from entity import Entity, get_entities_in_melee_range, rail_check, path_change, dead_end
 from death_functions import kill_player, kill_monster
 from game_messages import MessageLog
+from clock import Clock
 
 
 def main():
@@ -27,7 +29,7 @@ def main():
     # libtcod.sys_set_fps(24)
 
     con = console.Console(constants['screen_width'], constants['screen_height'])
-    UI = console.Console(get_constants()['screen_width'], get_constants()['UI_height'])
+    UI = console.Console(constants['screen_width'], constants['UI_height'])
 
     game_map = GameMap(constants['map_width'], constants['map_height'])
 
@@ -36,6 +38,8 @@ def main():
     fov_map = initialize_fov(game_map)
 
     message_log = MessageLog(constants['message_x'], constants['message_width'], constants['message_height'])
+
+    game_time = Clock(randint(1800, 1880), randint(1, 12), 1, randint(1, 23), 0)
 
     game_map.make_map(constants['max_rooms'], constants['depth'], constants['min_size'], entities, constants['max_monsters_per_room'], fov_map, player)
 
@@ -54,7 +58,7 @@ def main():
                           constants['fov_light_walls'], constants['fov_algorithm'])
 
         render_all(con, UI, entities, player, game_map, fov_map, fov_recompute,
-                   constants['fov_radius'], message_log, constants['screen_width'], constants['screen_height'], constants['colors'])
+                   constants['fov_radius'], message_log, game_time, constants['screen_width'], constants['screen_height'], constants['colors'])
 
         libtcod.console_flush()
 
@@ -122,6 +126,8 @@ def main():
                                 player.move(dx, dy)
                                 del prev[0]
 
+                            fov_recompute = True
+
                             game_state = GameStates.ENEMY_TURN
 
                         else:
@@ -129,13 +135,15 @@ def main():
 
         if move and game_state == GameStates.MOVE:
             dx, dy = move
+            destination_x = player.x + dx
+            destination_y = player.y + dy
             if not len(prev) == 0:
                 prevx, prevy = prev[0]
-                if prevx == player.x + dx and prevy == player.y + dy:
+                if prevx == destination_x and prevy == player.y + dy:
+                    print('Invalid Move')
+                elif game_map.is_blocked(destination_x, destination_y):
                     print('Invalid Move')
                 else:
-                    destination_x = player.x + dx
-                    destination_y = player.y + dy
                     prev.append((player.x, player.y))
 
                     if not game_map.is_blocked(destination_x, destination_y):
@@ -220,7 +228,24 @@ def main():
                         break
 
             else:
-                game_state = GameStates.PLAYERS_TURN
+                game_state = GameStates.CLOCK
+
+        if game_state == GameStates.CLOCK:
+            game_time.minutes += 10
+            if game_time.minutes >= 60:
+                game_time.minutes = 0
+                game_time.hours += 1
+                if game_time.hours > 23:
+                    game_time.hours = 0
+                    game_time.days += 1
+                    if game_time.days > game_time.check_month_for_days():
+                        game_time.days = 1
+                        game_time.month += 1
+                        if game_time.month > 12:
+                            game_time.month = 1
+                            game_time.year += 1
+
+            game_state = GameStates.PLAYERS_TURN
 
 
 if __name__ == '__main__':

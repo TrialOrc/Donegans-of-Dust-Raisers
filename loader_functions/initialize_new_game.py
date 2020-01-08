@@ -26,7 +26,7 @@ def get_constants():
     fov_light_walls = True
     fov_radius = 10
 
-    max_monsters_per_room = 20
+    max_monsters_per_room = 3
 
     player_speed = 2
     default_speed = 8

@@ -6,3 +6,4 @@ class GameStates(Enum):
     MOVE = 2
     ENEMY_TURN = 3
     PLAYER_DEAD = 4
+    CLOCK = 5
